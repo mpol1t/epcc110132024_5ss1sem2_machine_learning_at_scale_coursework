@@ -94,15 +94,14 @@ def train_model(params: YParams) -> None:
 
     # Trainer for testing on a single device
     test_trainer: Trainer = Trainer(
-        devices=1,  # Use a single device
-        num_nodes=1,  # Single node (non-distributed)
+        devices=1,
+        num_nodes=1,
         accelerator=params.accelerator,
         precision=params.precision if params.quantize else 32,
-        logger=False,  # Optionally disable logging for testing
-        callbacks=[],  # Optionally, no callbacks during testing
+        logger=False,
+        callbacks=[],
     )
 
-    # Later, when you want to test your model:
     test_trainer.test(model, datamodule=data_module)
 
 if __name__ == '__main__':
