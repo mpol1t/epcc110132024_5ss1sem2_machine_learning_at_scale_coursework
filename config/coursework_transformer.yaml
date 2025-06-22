@@ -1,0 +1,108 @@
+base: &base
+
+  # Model config
+  depth: 6                   # Number of transformer blocks in the model
+  qkv_bias: True                # Whether to add a bias term to the query, key, and value projections
+  embed_dim: 384                 # Dimensionality of the model embeddings
+  patch_size: 8                   # Size of the patches extracted from input images
+  num_heads: 8                   # Number of attention heads in each transformer block
+  mlp_ratio: 4.0                 # Multiplier for the size of the feed-forward layers in each transformer block
+
+  # Dropout settings
+  dropout: 0.0             # General dropout rate applied to the outputs of each layer
+  drop_rate: 0.0             # Dropout rate within the MLP block
+  attn_drop: 0.0             # Dropout rate applied to attention weights
+  proj_drop: 0.0             # Dropout rate applied after projecting the attention output
+  drop_path: 0.0             # Dropout rate for paths in stochastic depth
+  drop_path_rate: 0.0             # Controls the rate of dropout along the depth of the model
+
+  # Training config
+  dt: 1           # Time step increment (used in data preprocessing)
+  lr: 5E-4        # Initial learning rate
+  exp_dir: 'logs'      # Directory to store logs
+  exp_name: 'mlas_coursework'
+  warmup: 0           # Number of iterations for learning rate warmup
+  img_size: [ 360, 720 ]  # Dimensions of input images
+  num_iters: 30000       # Total number of iterations to train
+  optimizer: 'Adam'      # Optimization algorithm
+  lr_schedule: 'cosine'    # Type of learning rate scheduler
+  global_batch_size: 20          # Number of samples per batch during training
+
+  learning_rate_logging_interval: 'step'  # Specifies the interval for logging the learning rate.
+  learning_rate_logging_frequency: 1      # Frequency of logging the learning rate.
+
+  # Data
+  n_in_channels: 20          # Number of input channels in the data
+  n_out_channels: 20          # Number of output channels expected from the model
+  num_data_workers: 4          # Number of workers for data loading
+  data_loader_config: 'pytorch'   # Data loader configuration type
+
+  #  train_data_path:   '/scratch/space1/z04/adrianj/mlatscale_coursework/train'                   # Path to training data
+  #  valid_data_path:   '/scratch/space1/z04/adrianj/mlatscale_coursework/valid'                   # Path to validation data
+  #  inf_data_path:     '/scratch/space1/z04/adrianj/mlatscale_coursework/test'                    # Path to inference/test data
+  #  time_means_path:   '/scratch/space1/z04/adrianj/mlatscale_coursework/stats/time_means.npy'    # Path to time means data
+  #  global_means_path: '/scratch/space1/z04/adrianj/mlatscale_coursework/stats/global_means.npy'  # Path to global means data
+  #  global_stds_path:  '/scratch/space1/z04/adrianj/mlatscale_coursework/stats/global_stds.npy'   # Path to global standard deviations data
+
+  limit_nsamples: None        # Limit on number of samples used (None means use all available)
+  limit_nsamples_val: None        # Limit on number of validation samples used
+
+  epochs: 4                 # Number of full passes over the dataset
+  devices: 2                 # Number of devices per node
+  quantize: False             # Whether to use quantization
+  num_nodes: 1                 # Number of compute nodes
+  precision: '32'        # Numerical precision to use in computations
+  accelerator: 'gpu'             # Type of accelerator (e.g., 'gpu', 'tpu')
+  strategy: 'ddp'
+
+  checkpoint_top_k: 1           # Number of top models to save
+  log_every_n_steps: 1           # Logging frequency
+
+  tune_batch_size_enabled: False
+  tune_batch_size_mode: 'binsearch'
+  tune_batch_size_steps_per_trial: 3
+  tune_batch_size_init_val: 8
+  tune_batch_size_max_trials: 25
+  tune_batch_size_arg_name: 'batch_size'
+
+  tune_learning_rate_enabled: False
+  tune_learning_rate_min_lr: 1e-8
+  tune_learning_rate_max_lr: 1
+  tune_learning_rate_num_training_steps: 10
+  tune_learning_rate_mode: 'exponential'
+  tune_learning_rate_early_stop_threshold: 4.0
+  tune_learning_rate_update_attr: True
+  tune_learning_rate_attr_name: 'lr'
+
+  early_stopping_patience: 3
+  early_stopping_monitor: 'val_loss'
+  early_stopping_min_delta: .0
+  early_stopping_verbose: False
+  early_stopping_mode: 'min'
+  early_stopping_strict: True
+  early_stopping_check_finite: True
+  early_stopping_log_rank_zero_only: True
+
+  data_loader_prefetch_factor: 4
+  data_loader_train_data_path: '/home/michal/dataset/train/'
+  data_loader_valid_data_path: '/home/michal/dataset/valid/'
+  data_loader_inf_data_path: '/home/michal/dataset/test/'
+  data_loader_time_means_path: '/home/michal/dataset/stats/time_means.npy'
+  data_loader_global_means_path: '/home/michal/dataset/stats/global_means.npy'
+  data_loader_global_stds_path: '/home/michal/dataset/stats/global_stds.npy'
+
+  trainer_use_distributed_sampler: True
+  trainer_sync_batch_norm: True
+  trainer_gradient_clip_algorithm: 'norm'
+  trainer_accumulate_grad_batches: 1
+  trainer_benchmark: True
+  trainer_enable_model_summary: True
+  trainer_model_summary_max_depth: -1
+
+# This short configuration has a smaller number of iterations and samples to reduce the runtime
+short: &short_ls
+  <<: *base
+
+  num_iters: 128
+  limit_nsamples: 512
+  limit_nsamples_val: 128
